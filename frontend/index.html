@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>ProsperApp - Gestión de proyectos</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --panel:#ffffff;
+      --panel-2:#f8fafc;
+      --text:#172033;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#5b5ce2;
+      --primary-2:#7c7df0;
+      --primary-soft:#ededff;
+      --success:#22a06b;
+      --success-soft:#e8f7f0;
+      --warning:#d97706;
+      --warning-soft:#fff5df;
+      --danger:#d14343;
+      --danger-soft:#fff0f0;
+      --shadow:0 12px 30px rgba(30,41,59,.08);
+      --radius:16px;
+      --radius-sm:12px;
+      --sidebar:248px;
+    }
+    [data-theme="dark"]{
+      --bg:#0f1421;
+      --panel:#171d2b;
+      --panel-2:#1d2434;
+      --text:#eef2ff;
+      --muted:#9aa5b7;
+      --line:#2a3448;
+      --primary:#8889ff;
+      --primary-2:#a1a2ff;
+      --primary-soft:#252750;
+      --success:#42c68a;
+      --success-soft:#183a2c;
+      --warning:#f3a746;
+      --warning-soft:#3d2b14;
+      --danger:#ff7777;
+      --danger-soft:#442326;
+      --shadow:0 16px 36px rgba(0,0,0,.24);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit;text-decoration:none}
+    .app{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100vh}
+    .sidebar{
+      position:sticky;top:0;height:100vh;
+      background:var(--panel);border-right:1px solid var(--line);
+      padding:20px 16px;display:flex;flex-direction:column;z-index:20
+    }
+    .brand{display:flex;align-items:center;gap:11px;padding:6px 10px 22px}
+    .brand-mark{
+      width:38px;height:38px;border-radius:12px;
+      display:grid;place-items:center;
+      color:#fff;background:linear-gradient(135deg,var(--primary),#8a5cf6);
+      box-shadow:0 8px 18px rgba(91,92,226,.25);font-weight:800
+    }
+    .brand strong{font-size:18px;letter-spacing:-.02em}
+    .brand small{display:block;color:var(--muted);margin-top:2px;font-size:11px}
+    .nav-label{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);padding:10px 12px 6px;font-weight:700}
+    .nav{display:grid;gap:5px}
+    .nav button{
+      width:100%;border:0;background:transparent;color:var(--muted);
+      display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;text-align:left;font-weight:650
+    }
+    .nav button:hover{background:var(--panel-2);color:var(--text)}
+    .nav button.active{background:var(--primary-soft);color:var(--primary)}
+    .nav .ico{width:22px;text-align:center;font-size:17px}
+    .sidebar-bottom{margin-top:auto;display:grid;gap:10px}
+    .usage{border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--panel-2)}
+    .usage-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+    .progress{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+    .progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));border-radius:999px}
+    .profile{
+      display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px
+    }
+    .avatar{
+      width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+      color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);font-weight:800
+    }
+    .profile strong{font-size:13px}.profile small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+
+    .main{min-width:0}
+    .topbar{
+      height:72px;position:sticky;top:0;z-index:15;
+      background:color-mix(in srgb,var(--bg) 86%, transparent);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid color-mix(in srgb,var(--line) 70%, transparent);
+      display:flex;align-items:center;justify-content:space-between;padding:0 28px
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .mobile-menu{display:none}
+    .search{
+      width:min(380px,42vw);position:relative
+    }
+    .search input{
+      width:100%;height:40px;border:1px solid var(--line);border-radius:12px;
+      background:var(--panel);color:var(--text);padding:0 14px 0 40px;outline:none
+    }
+    .search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 18%, transparent)}
+    .search span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .icon-btn{
+      width:40px;height:40px;border:1px solid var(--line);border-radius:12px;
+      background:var(--panel);color:var(--text);display:grid;place-items:center
+    }
+    .icon-btn:hover{border-color:var(--primary);color:var(--primary)}
+    .primary-btn,.secondary-btn,.ghost-btn,.danger-btn{
+      border:0;border-radius:11px;padding:10px 15px;font-weight:750;display:inline-flex;align-items:center;gap:8px
+    }
+    .primary-btn{background:var(--primary);color:#fff;box-shadow:0 8px 16px rgba(91,92,226,.2)}
+    .primary-btn:hover{filter:brightness(1.04)}
+    .secondary-btn{background:var(--primary-soft);color:var(--primary)}
+    .ghost-btn{background:transparent;color:var(--muted);border:1px solid var(--line)}
+    .danger-btn{background:var(--danger-soft);color:var(--danger)}
+    .content{padding:28px;max-width:1600px;margin:0 auto}
+    .view{display:none}.view.active{display:block}
+    .page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:22px}
+    .page-head h1{margin:0;font-size:28px;letter-spacing:-.035em}
+    .page-head p{margin:7px 0 0;color:var(--muted)}
+    .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);font-weight:800;margin-bottom:8px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;
+      border:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted)
+    }
+    .chip.active{background:var(--primary-soft);color:var(--primary);border-color:transparent}
+
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px}
+    .stat-card,.card{
+      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)
+    }
+    .stat-card{padding:18px;display:flex;align-items:flex-start;justify-content:space-between}
+    .stat-card .label{font-size:13px;color:var(--muted);font-weight:650}
+    .stat-card .value{font-size:27px;font-weight:850;letter-spacing:-.04em;margin-top:8px}
+    .stat-card .delta{font-size:11px;margin-top:7px;color:var(--success);font-weight:700}
+    .stat-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary)}
+    .dashboard-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,.85fr);gap:18px}
+    .card{padding:20px}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+    .card-head h2{font-size:17px;margin:0}
+    .card-head p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .project-highlight{
+      padding:20px;border-radius:16px;background:
+      radial-gradient(circle at 90% 0, color-mix(in srgb,var(--primary) 25%, transparent), transparent 40%),
+      linear-gradient(135deg,var(--panel-2),var(--panel));
+      border:1px solid var(--line)
+    }
+    .project-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+    .project-title{display:flex;gap:12px;align-items:center}
+    .project-logo{
+      width:48px;height:48px;border-radius:14px;display:grid;place-items:center;
+      background:linear-gradient(135deg,#5b5ce2,#10b981);color:#fff;font-weight:900
+    }
+    .project-title h3{margin:0;font-size:18px}.project-title p{margin:5px 0 0;color:var(--muted);font-size:12px}
+    .badge{
+      display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:800
+    }
+    .badge.success{background:var(--success-soft);color:var(--success)}
+    .badge.warning{background:var(--warning-soft);color:var(--warning)}
+    .badge.neutral{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+    .project-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+    .mini-metric{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+    .mini-metric span{display:block;color:var(--muted);font-size:11px}
+    .mini-metric strong{display:block;margin-top:5px;font-size:15px}
+    .activity-list{display:grid;gap:14px}
+    .activity{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start}
+    .activity .dot{width:34px;height:34px;border-radius:10px;background:var(--panel-2);display:grid;place-items:center}
+    .activity p{margin:0;font-size:13px;line-height:1.4}
+    .activity small{color:var(--muted);font-size:11px}
+    .deadline-list{display:grid;gap:10px}
+    .deadline{
+      display:grid;grid-template-columns:44px 1fr auto;gap:11px;align-items:center;
+      padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)
+    }
+    .date-box{height:44px;border-radius:10px;background:var(--panel);display:grid;place-items:center;line-height:1}
+    .date-box b{font-size:16px}.date-box small{font-size:9px;color:var(--muted);text-transform:uppercase}
+    .deadline strong{font-size:12px}.deadline p{margin:4px 0 0;font-size:11px;color:var(--muted)}
+    .donut-wrap{display:flex;align-items:center;gap:20px;padding:10px 0}
+    .donut{
+      width:118px;height:118px;border-radius:50%;
+      background:conic-gradient(var(--primary) 0 68%, var(--line) 68%);
+      position:relative;flex:0 0 auto
+    }
+    .donut:after{
+      content:var(--donut-label,"0%");position:absolute;inset:17px;border-radius:50%;background:var(--panel);
+      display:grid;place-items:center;font-size:22px;font-weight:850
+    }
+    .legend{display:grid;gap:9px;flex:1}
+    .legend-row{display:flex;justify-content:space-between;font-size:12px}
+    .legend-row span:first-child{color:var(--muted)}
+    .section-title{font-size:17px;margin:0 0 14px}
+
+    .projects-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .project-card{padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+    .project-card-top{display:flex;justify-content:space-between;gap:12px}
+    .project-card h3{margin:14px 0 6px;font-size:17px}
+    .project-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.55;min-height:38px}
+    .project-card .progress{margin:16px 0 8px}
+    .project-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:15px}
+    .avatars{display:flex}.avatars span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);border:2px solid var(--panel);margin-left:-6px;font-size:10px;font-weight:800}.avatars span:first-child{margin-left:0}
+
+    .board-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
+    .board-toolbar-left,.board-toolbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .select{
+      height:38px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:0 10px
+    }
+    .board{
+      display:grid;grid-auto-flow:column;grid-auto-columns:minmax(285px,1fr);gap:14px;overflow-x:auto;padding-bottom:10px
+    }
+    .column{
+      background:var(--panel-2);border:1px solid var(--line);border-radius:15px;padding:12px;min-height:560px
+    }
+    .column.drag-over{outline:2px dashed var(--primary);outline-offset:2px}
+    .column-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:2px 3px}
+    .column-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}
+    .count{display:grid;place-items:center;min-width:23px;height:23px;padding:0 7px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:10px;color:var(--muted)}
+    .cards{display:grid;gap:10px}
+    .task{
+      background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:13px;
+      box-shadow:0 5px 13px rgba(30,41,59,.05);cursor:grab
+    }
+    .task:active{cursor:grabbing}
+    .task:hover{border-color:color-mix(in srgb,var(--primary) 45%, var(--line));transform:translateY(-1px)}
+    .task-tags{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .priority{font-size:10px;font-weight:850;padding:5px 7px;border-radius:999px}
+    .priority.alta{background:var(--danger-soft);color:var(--danger)}
+    .priority.media{background:var(--warning-soft);color:var(--warning)}
+    .priority.baja{background:var(--success-soft);color:var(--success)}
+    .task h4{margin:0;font-size:13px;line-height:1.45}
+    .task p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+    .task-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}
+    .task-meta{display:flex;gap:9px;align-items:center}
+    .add-card{
+      width:100%;margin-top:10px;border:1px dashed var(--line);background:transparent;color:var(--muted);
+      border-radius:11px;padding:10px;font-weight:700
+    }
+    .add-card:hover{border-color:var(--primary);color:var(--primary)}
+
+    .table-card{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:720px}
+    th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line);font-size:12px}
+    th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+    td strong{font-size:12px}
+    .report-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    .bars{height:240px;display:flex;align-items:end;gap:14px;padding:15px 10px 0}
+    .bar-wrap{flex:1;display:grid;gap:8px;justify-items:center}
+    .bar{width:100%;max-width:46px;background:linear-gradient(180deg,var(--primary-2),var(--primary));border-radius:10px 10px 3px 3px;min-height:8px}
+    .bar-wrap span{font-size:10px;color:var(--muted)}
+    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line)}
+    .setting-row:last-child{border-bottom:0}.setting-row strong{font-size:13px}.setting-row p{margin:4px 0 0;color:var(--muted);font-size:11px}
+    .switch{width:42px;height:24px;border-radius:999px;background:var(--line);position:relative}
+    .switch:before{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+    .switch.on{background:var(--primary)}.switch.on:before{left:21px}
+
+    dialog{
+      border:0;border-radius:18px;padding:0;width:min(680px,calc(100vw - 28px));max-height:90vh;
+      background:var(--panel);color:var(--text);box-shadow:0 30px 80px rgba(0,0,0,.25)
+    }
+    dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(4px)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}
+    .modal-head h2{margin:0;font-size:18px}.modal-body{padding:22px;overflow:auto;max-height:65vh}.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:17px 22px;border-top:1px solid var(--line)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .field{display:grid;gap:7px}.field.full{grid-column:1/-1}
+    label{font-size:12px;font-weight:750}
+    input,textarea,select{
+      border:1px solid var(--line);border-radius:11px;background:var(--panel-2);color:var(--text);padding:10px 12px;outline:none
+    }
+    input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 14%, transparent)}
+    textarea{min-height:92px;resize:vertical}
+    .columns-preview{display:grid;gap:8px}
+    .column-name{display:flex;gap:8px}.column-name input{flex:1}
+    .checklist{display:grid;gap:8px;margin-top:8px}
+    .check-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+    .check-item input{width:17px;height:17px}
+    .toast{
+      position:fixed;right:22px;bottom:22px;background:var(--text);color:var(--panel);padding:12px 15px;border-radius:12px;
+      box-shadow:var(--shadow);font-size:12px;font-weight:700;opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s;z-index:100
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+    .empty{padding:38px;text-align:center;color:var(--muted)}
+    .prototype-note{
+      position:fixed;left:50%;bottom:12px;transform:translateX(-50%);
+      font-size:10px;color:var(--muted);background:color-mix(in srgb,var(--panel) 88%, transparent);
+      backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:6px 10px;z-index:30
+    }
+
+    @media (max-width:1100px){
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .dashboard-grid,.report-grid{grid-template-columns:1fr}
+      .projects-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:820px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:fixed;left:-260px;width:248px;transition:.25s;box-shadow:var(--shadow)}
+      .sidebar.open{left:0}
+      .mobile-menu{display:grid}
+      .topbar{padding:0 16px}.content{padding:18px}
+      .search{width:min(300px,46vw)}
+      .projects-grid,.settings-grid{grid-template-columns:1fr}
+      .page-head{flex-direction:column}
+    }
+    @media (max-width:580px){
+      .stats{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+      .top-actions .primary-btn span{display:none}
+      .search{width:calc(100vw - 180px)}
+      .project-metrics{grid-template-columns:1fr}
+      .donut-wrap{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">P</div>
+      <div><strong>ProsperApp</strong><small>Proyectos personales</small></div>
+    </div>
+
+    <div class="nav-label">Espacio de trabajo</div>
+    <nav class="nav">
+      <button class="active" data-view="dashboard"><span class="ico">⌂</span>Dashboard</button>
+      <button data-view="proyectos"><span class="ico">▦</span>Proyectos</button>
+      <button data-view="trabajo"><span class="ico">✓</span>Mi trabajo</button>
+      <button data-view="reportes"><span class="ico">↗</span>Reportes</button>
+    </nav>
+
+    <div class="nav-label">Sistema</div>
+    <nav class="nav">
+      <button data-view="configuracion"><span class="ico">⚙</span>Configuración</button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="usage">
+        <div class="usage-row"><span>Proyectos activos</span><strong id="usageCount">3/6</strong></div>
+        <div class="progress"><span id="usageBar" style="width:50%"></span></div>
+      </div>
+      <div class="profile">
+        <div class="avatar">PG</div>
+        <div><strong>Pedro Gómez</strong><small>Desarrollador individual</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn mobile-menu" id="mobileMenu" aria-label="Abrir menú">☰</button>
+        <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Buscar funcionalidades, proyectos..." /></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeToggle" title="Cambiar tema">◐</button>
+        <button class="icon-btn" title="Notificaciones">◉</button>
+        <button class="primary-btn" id="newProjectBtn"><b>＋</b><span>Nuevo proyecto</span></button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="view active" id="view-dashboard">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">Resumen general</div>
+            <h1 id="welcomeTitle">Buenos días</h1>
+            <p>Este es el estado actual de tus proyectos personales.</p>
+          </div>
+          <div class="chips">
+            <span class="chip active">Esta semana</span>
+            <span class="chip">Este mes</span>
+          </div>
+        </div>
+
+        <div class="stats">
+          <article class="stat-card">
+            <div><div class="label">Proyectos activos</div><div class="value" id="statProjects">0</div><div class="delta">Registrados en PostgreSQL</div></div>
+            <div class="stat-icon">▦</div>
+          </article>
+          <article class="stat-card">
+            <div><div class="label">Funcionalidades pendientes</div><div class="value" id="statPending">0</div><div class="delta">En secciones no finales</div></div>
+            <div class="stat-icon">☷</div>
+          </article>
+          <article class="stat-card">
+            <div><div class="label">Progreso promedio</div><div class="value" id="statProgress">0%</div><div class="delta">Según funcionalidades terminadas</div></div>
+            <div class="stat-icon">◔</div>
+          </article>
+          <article class="stat-card">
+            <div><div class="label">Presupuesto disponible</div><div class="value" id="statBudget">$0</div><div class="delta" id="statBudgetDetail">Sin gastos registrados</div></div>
+            <div class="stat-icon">$</div>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-head">
+              <div><h2>Proyecto principal</h2><p>Último proyecto actualizado</p></div>
+              <button class="ghost-btn" id="openMainBoard">Abrir tablero →</button>
+            </div>
+            <div class="project-highlight" id="mainProject">
+              <div class="project-top">
+                <div class="project-title">
+                  <div class="project-logo">AI</div>
+                  <div><h3>Asistente de estudio con IA</h3><p>Aplicación web para organizar notas, tarjetas y sesiones de estudio.</p></div>
+                </div>
+                <span class="badge success">En curso</span>
+              </div>
+              <div class="project-metrics">
+                <div class="mini-metric"><span>Progreso</span><strong>68%</strong></div>
+                <div class="mini-metric"><span>Próximo hito</span><strong>MVP funcional</strong></div>
+                <div class="mini-metric"><span>Entrega estimada</span><strong>28 jul. 2026</strong></div>
+              </div>
+              <div class="progress"><span style="width:68%"></span></div>
+            </div>
+
+            <div style="height:18px"></div>
+            <div class="card-head">
+              <div><h2>Actividad reciente</h2><p>Cambios registrados en los últimos días</p></div>
+            </div>
+            <div class="activity-list" id="activityList">
+              <div class="activity">
+                <div class="dot">✓</div>
+                <div><p>Se completó <strong>Autenticación por correo</strong></p><small>Asistente de estudio con IA</small></div>
+                <small>Hace 2 h</small>
+              </div>
+              <div class="activity">
+                <div class="dot">↔</div>
+                <div><p><strong>Diseñar esquema de base de datos</strong> pasó a En progreso</p><small>Asistente de estudio con IA</small></div>
+                <small>Ayer</small>
+              </div>
+              <div class="activity">
+                <div class="dot">＋</div>
+                <div><p>Se creó el proyecto <strong>Monitor de gastos personales</strong></p><small>Nuevo proyecto</small></div>
+                <small>12 jul.</small>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;gap:18px">
+            <div class="card">
+              <div class="card-head"><div><h2>Distribución del trabajo</h2><p>Funcionalidades por estado</p></div></div>
+              <div class="donut-wrap">
+                <div class="donut" id="workDonut"></div>
+                <div class="legend" id="workLegend">
+                  <div class="legend-row"><span>Completadas</span><strong>17</strong></div>
+                  <div class="legend-row"><span>En progreso</span><strong>6</strong></div>
+                  <div class="legend-row"><span>Pendientes</span><strong>8</strong></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h2>Próximas fechas</h2><p>Entregables y vencimientos</p></div></div>
+              <div class="deadline-list" id="deadlineList">
+                <div class="deadline"><div class="date-box"><b>18</b><small>JUL</small></div><div><strong>Esquema relacional v1</strong><p>Asistente de estudio con IA</p></div><span class="badge warning">4 días</span></div>
+                <div class="deadline"><div class="date-box"><b>24</b><small>JUL</small></div><div><strong>Pruebas del MVP</strong><p>Monitor de gastos</p></div><span class="badge neutral">10 días</span></div>
+                <div class="deadline"><div class="date-box"><b>28</b><small>JUL</small></div><div><strong>Entrega del prototipo</strong><p>Asistente de estudio con IA</p></div><span class="badge neutral">14 días</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-proyectos">
+        <div class="page-head">
+          <div><div class="eyebrow">Portafolio</div><h1>Mis proyectos</h1><p>Gestiona tus ideas, experimentos y productos personales.</p></div>
+          <button class="primary-btn" id="newProjectBtn2">＋ Nuevo proyecto</button>
+        </div>
+        <div class="projects-grid" id="projectsGrid"></div>
+      </section>
+
+      <section class="view" id="view-tablero">
+        <div class="page-head">
+          <div><div class="eyebrow">Proyecto activo</div><h1 id="boardProjectTitle">Asistente de estudio con IA</h1><p id="boardProjectDesc">Organiza el backlog, el desarrollo y la liberación del producto.</p></div>
+          <div class="chips"><span class="chip active" id="boardProgress">0% completado</span><span class="chip" id="boardDeadline">Sin fecha</span></div>
+        </div>
+        <div class="board-toolbar">
+          <div class="board-toolbar-left">
+            <select class="select" id="priorityFilter">
+              <option value="">Todas las prioridades</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+            <button class="ghost-btn" id="clearFilters">Limpiar filtros</button>
+          </div>
+          <div class="board-toolbar-right">
+            <span class="chip">Arrastra tarjetas para cambiar su estado</span>
+            <button class="secondary-btn" id="addFeatureBtn">＋ Funcionalidad</button>
+          </div>
+        </div>
+        <div class="board" id="board"></div>
+      </section>
+
+      <section class="view" id="view-trabajo">
+        <div class="page-head">
+          <div><div class="eyebrow">Ejecución</div><h1>Mi trabajo</h1><p>Funcionalidades asignadas, organizadas por prioridad y fecha.</p></div>
+          <div class="chips"><span class="chip active">Pendientes</span><span class="chip">Completadas</span></div>
+        </div>
+        <div class="card table-card">
+          <table>
+            <thead><tr><th>Funcionalidad</th><th>Proyecto</th><th>Estado</th><th>Prioridad</th><th>Entrega</th><th>Progreso</th></tr></thead>
+            <tbody id="workTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="view" id="view-reportes">
+        <div class="page-head">
+          <div><div class="eyebrow">Analítica</div><h1>Reportes</h1><p>Seguimiento del avance, esfuerzo y presupuesto.</p></div>
+          <button class="ghost-btn">Exportar resumen</button>
+        </div>
+        <div class="report-grid">
+          <div class="card">
+            <div class="card-head"><div><h2>Funcionalidades completadas</h2><p>Últimas seis semanas</p></div><span class="badge success">6 semanas</span></div>
+            <div class="bars" id="completionReport"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h2>Presupuesto por proyecto</h2><p>Ejecución frente al total definido</p></div></div>
+            <div class="legend" id="budgetReport" style="gap:16px">
+              <div><div class="legend-row"><span>Asistente de estudio con IA</span><strong>62%</strong></div><div class="progress" style="margin-top:7px"><span style="width:62%"></span></div></div>
+              <div><div class="legend-row"><span>Monitor de gastos</span><strong>38%</strong></div><div class="progress" style="margin-top:7px"><span style="width:38%"></span></div></div>
+              <div><div class="legend-row"><span>API de inventario</span><strong>81%</strong></div><div class="progress" style="margin-top:7px"><span style="width:81%"></span></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-configuracion">
+        <div class="page-head">
+          <div><div class="eyebrow">Preferencias</div><h1>Configuración</h1><p>Personaliza el comportamiento general del prototipo.</p></div>
+        </div>
+        <div class="settings-grid">
+          <div class="card">
+            <h2 class="section-title">Notificaciones</h2>
+            <div class="setting-row"><div><strong>Recordatorios de entrega</strong><p>Avisa 3 días antes de una fecha límite.</p></div><button class="switch on" aria-label="Activar recordatorios"></button></div>
+            <div class="setting-row"><div><strong>Resumen semanal</strong><p>Recibe un resumen de progreso cada lunes.</p></div><button class="switch on" aria-label="Activar resumen"></button></div>
+            <div class="setting-row"><div><strong>Actividad del proyecto</strong><p>Notifica cambios de estado y nuevas tareas.</p></div><button class="switch" aria-label="Activar actividad"></button></div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Preferencias de trabajo</h2>
+            <div class="field"><label>Moneda predeterminada</label><select><option>COP — Peso colombiano</option><option>USD — Dólar estadounidense</option></select></div>
+            <div style="height:14px"></div>
+            <div class="field"><label>Vista inicial</label><select><option>Dashboard</option><option>Último tablero abierto</option><option>Mi trabajo</option></select></div>
+            <div style="height:14px"></div>
+            <div class="field"><label>Formato de fecha</label><select><option>DD/MM/AAAA</option><option>AAAA-MM-DD</option></select></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<dialog id="projectDialog">
+  <form method="dialog" id="projectForm">
+    <div class="modal-head"><h2>Crear nuevo proyecto</h2><button class="icon-btn" value="cancel" aria-label="Cerrar">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label for="projectName">Nombre del proyecto</label><input id="projectName" required placeholder="Ej. Automatizador de reportes" /></div>
+        <div class="field full"><label for="projectDescription">Descripción</label><textarea id="projectDescription" placeholder="Objetivo principal y alcance inicial"></textarea></div>
+        <div class="field"><label for="projectDeadline">Fecha objetivo</label><input id="projectDeadline" type="date" /></div>
+        <div class="field"><label for="projectBudget">Presupuesto (COP)</label><input id="projectBudget" type="number" min="0" step="10000" placeholder="1500000" /></div>
+        <div class="field full">
+          <label for="columnCount">Número de secciones del tablero (1 a 6)</label>
+          <input id="columnCount" type="range" min="1" max="6" value="4" />
+          <div class="columns-preview" id="columnsPreview"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="ghost-btn" value="cancel">Cancelar</button><button class="primary-btn" id="saveProject" value="default">Crear proyecto</button></div>
+  </form>
+</dialog>
+
+<dialog id="featureDialog">
+  <form method="dialog" id="featureForm">
+    <div class="modal-head"><h2 id="featureModalTitle">Nueva funcionalidad</h2><button class="icon-btn" value="cancel" aria-label="Cerrar">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label for="featureTitle">Título</label><input id="featureTitle" required placeholder="Ej. Inicio de sesión con correo" /></div>
+        <div class="field full"><label for="featureDescription">Historia o descripción</label><textarea id="featureDescription" placeholder="Como usuario, quiero..."></textarea></div>
+        <div class="field"><label for="featurePriority">Prioridad</label><select id="featurePriority"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div>
+        <div class="field"><label for="featureStatus">Sección</label><select id="featureStatus"></select></div>
+        <div class="field"><label for="featureDate">Fecha límite</label><input id="featureDate" type="date" /></div>
+        <div class="field"><label for="featureEstimate">Estimación</label><input id="featureEstimate" placeholder="Ej. 6 h" /></div>
+        <div class="field full">
+          <label>Checklist de subtareas</label>
+          <div class="checklist" id="checklist"></div>
+          <button type="button" class="ghost-btn" id="addChecklist" style="margin-top:8px">＋ Añadir subtarea</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="danger-btn" id="deleteFeature" style="display:none;margin-right:auto">Eliminar</button>
+      <button class="ghost-btn" value="cancel">Cancelar</button>
+      <button class="primary-btn" id="saveFeature" value="default">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast">Cambios guardados</div>
+<div class="prototype-note" id="connectionStatus">Conectando con PostgreSQL...</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
